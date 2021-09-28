@@ -6,7 +6,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-@SpringBootTest
+//@SpringBootTest
 public class FlusScheduleTests {
 
     @Test
@@ -14,11 +14,11 @@ public class FlusScheduleTests {
         Scheduler schedulerA = Schedulers.newParallel("Scheduler A");
         Scheduler schedulerB = Schedulers.newParallel("Scheduler B");
         Scheduler schedulerC = Schedulers.newParallel("Scheduler C");
-        Flux.just("x")
+        Flux.just("x").log()
                 .map(i -> {
                     System.out.println("First map: " + Thread.currentThread().getName());
                     return i;
-                })
+                }).log()
                 .subscribeOn(schedulerA)
                 .map(i -> {
                     System.out.println("Second map: " + Thread.currentThread().getName());

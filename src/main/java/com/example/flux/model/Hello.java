@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Hello {
-    private String message ;
+    private String action ;
     private String name;
 
 //    public Hello(String message, String name) {

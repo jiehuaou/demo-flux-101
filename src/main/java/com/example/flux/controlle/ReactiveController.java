@@ -28,7 +28,7 @@ public class ReactiveController {
         return ResponseEntity.ok(mono);
     }
 
-    @RequestMapping(value = "/hello",  produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @RequestMapping(value = "/hello",  produces = MediaType.APPLICATION_JSON_VALUE)
     public Flux<Hello> helloAll(){
         Flux<Hello> ret = Flux.just(new Hello("hello", "a1"),
                 new Hello("hello", "a2"),

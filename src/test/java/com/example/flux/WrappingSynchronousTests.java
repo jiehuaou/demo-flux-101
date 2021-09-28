@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-@SpringBootTest
+//@SpringBootTest
 public class WrappingSynchronousTests {
     @Test
     void testWrappingSynchronous(){
@@ -16,6 +16,6 @@ public class WrappingSynchronousTests {
                 .map(x-> {
                     System.out.println("Mono -> " + x);
                     return x;
-                }).block();
+                }).log().block();
     }
 }

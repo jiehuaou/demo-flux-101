@@ -6,7 +6,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+import java.util.function.Supplier;
+
+//@SpringBootTest
 class FluxApplicationTests {
 
 	@Test
@@ -72,7 +74,7 @@ class FluxApplicationTests {
 	}
 
 	@Test
-	void testGenFlux(){
+	void testGenerateFlux(){
 		Flux<String> flux = Flux.generate(
 				() -> 0,
 				(state, sink) -> {
@@ -118,5 +120,38 @@ class FluxApplicationTests {
 				.flatMap(x->x)
 				.log()
 				.blockLast();
+	}
+
+//	Mono<Void> getMonoVoid(){
+//		return Mono.just("OK").then();
+//	}
+
+	@Test
+	void testMonoVoid(){
+
+		Mono<Void> mono1 = Mono.empty();
+		mono1
+			.doOnNext(el->System.out.println(el))   // never happen
+			.doOnSuccess(el->System.out.println("--- done 1 ---"))
+			.subscribe();
+
+
+
+		Supplier<Mono<Void>> func = ()->Mono.just("OK").then();
+		Mono<Void> mono2 = func.get();
+		mono2
+			.doOnNext(el->System.out.println(el))   // never happen
+			.doOnSuccess(el->System.out.println("--- done 2 ---"))
+			.subscribe();
+	}
+
+	@Test
+	void testDoOnNext(){
+
+		Flux<String> data = Flux.just("hello", "world");
+		data
+			.doOnNext(el->System.out.println(el))   // happen 2 times
+			.doFinally(el->System.out.println("--- done ---"))
+			.subscribe();
 	}
 }

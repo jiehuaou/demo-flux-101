@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+//@SpringBootTest
 public class ContextTests {
     @Test
     void testContext() {
