@@ -1,4 +1,4 @@
-package com.example.flux.good;
+package com.example.flux.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;

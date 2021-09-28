@@ -1,4 +1,4 @@
-package com.example.flux.good;
+package com.example.flux.model;
 
 import lombok.Data;
 

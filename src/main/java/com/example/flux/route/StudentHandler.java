@@ -1,6 +1,6 @@
-package com.example.flux.good;
+package com.example.flux.route;
 
-import com.fasterxml.jackson.databind.BeanProperty;
+import com.example.flux.model.Student;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;

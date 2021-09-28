@@ -1,4 +1,4 @@
-package com.example.flux;
+package com.example.flux.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
