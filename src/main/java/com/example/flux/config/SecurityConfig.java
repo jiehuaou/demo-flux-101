@@ -29,15 +29,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        return http.authorizeExchange()
+        return http
+                .authorizeExchange() // following path with specific ROLE
                 .pathMatchers("/students/admin").hasAuthority("ROLE_ADMIN")
                 .pathMatchers("/students/*").hasAuthority("ROLE_USER")
                 .pathMatchers("/say/*").hasAuthority("ROLE_ADMIN")
-                .pathMatchers("/hello").permitAll()
-                .pathMatchers("/say-www").permitAll()
-                .anyExchange()
-                .authenticated()
-                .and().httpBasic()
+                .pathMatchers("/hello").permitAll()   // allow all, either login ot not
+                .pathMatchers("/say-www").permitAll()  // allow all, either login ot not
+
+                .anyExchange().authenticated()  // all other path with authenticated
+
+                .and().httpBasic()  // use http-basic auth method
                 .and().build();
     }
 
