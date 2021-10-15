@@ -103,9 +103,9 @@ class FluxApplicationTests {
 		Flux<String> flux = Flux.just(
 				"aaa bbb", "hello world");
 
-		flux.log()
+		flux
 				.flatMap(x-> Flux.just(x.split(" ")))
-				.log()
+				.doOnNext(System.out::println)
 				.blockLast();
 	}
 
@@ -130,6 +130,7 @@ class FluxApplicationTests {
 	void testMonoVoid(){
 
 		Mono<Void> mono1 = Mono.empty();
+
 		mono1
 			.doOnNext(el->System.out.println(el))   // never happen
 			.doOnSuccess(el->System.out.println("--- done 1 ---"))
@@ -139,6 +140,7 @@ class FluxApplicationTests {
 
 		Supplier<Mono<Void>> func = ()->Mono.just("OK").then();
 		Mono<Void> mono2 = func.get();
+
 		mono2
 			.doOnNext(el->System.out.println(el))   // never happen
 			.doOnSuccess(el->System.out.println("--- done 2 ---"))
