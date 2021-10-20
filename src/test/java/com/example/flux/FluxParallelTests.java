@@ -41,6 +41,7 @@ public class FluxParallelTests {
                     }
                 })
                 .sequential()
+                .doOnNext(System.out::println)
                 .blockLast();
     }
 
@@ -50,7 +51,7 @@ public class FluxParallelTests {
 
         Flux.range(1, 15)
                 .parallel(3)
-                .runOn(Schedulers.elastic())
+                .runOn(Schedulers.boundedElastic())
                 .doOnNext(i -> {
                     {
                         System.out.println(String.format("Executing %s on thread %s", i, Thread.currentThread().getName()));
@@ -59,6 +60,7 @@ public class FluxParallelTests {
                     }
                 })
                 .sequential()
+                .doOnNext(System.out::println)
                 .doFinally(signal -> latch.countDown())
                 .subscribe();
 
