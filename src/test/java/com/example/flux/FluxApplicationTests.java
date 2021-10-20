@@ -17,12 +17,20 @@ class FluxApplicationTests {
 		color.log().subscribe(System.out::println);
 	}
 
+	/**
+	 * [a1,a2, ...] -> map( λ ) -> [b1, b2, ...]
+	 */
+
 	@Test
 	void mapExample() {
 		Flux<String> fluxColors = Flux.just("red", "green", "blue");
 		fluxColors.map(color -> color.charAt(0)).subscribe(System.out::println);
 	}
 
+	/**
+	 * combine 2 or more flux,
+	 * zip(flux1, flux2 ...) -> [a1, b1, ...] [a2, b2 ...]
+	 */
 	@Test
 	void zipExample() {
 		Flux<String> fluxFruits = Flux.just("apple", "pear", "plum");
@@ -42,9 +50,12 @@ class FluxApplicationTests {
 				);
 	}
 
+	/**
+	 * onErrorReturn( T arg ) -> return this arg then abort
+	 */
 	@Test
 	public void onErrorReturnExample() {
-		Flux<String> fluxCalc = Flux.just(-1, 0, 1)
+		Flux<String> fluxCalc = Flux.just(2, 1, 0, 3)
 				.map(i -> "10 / " + i + " = " + (10 / i))
 				.onErrorReturn(ArithmeticException.class, "Division by 0 not allowed");
 
@@ -52,9 +63,12 @@ class FluxApplicationTests {
 				error -> System.err.println("Error: " + error));
 	}
 
+	/**
+	 * onErrorResume(Publisher argFlux) -> Subscribe argFlux
+	 */
 	@Test
 	public void onErrorResumeExample() {
-		Flux<String> fluxCalc = Flux.just(-1, 0, 1)
+		Flux<String> fluxCalc = Flux.just(-1, 0, 1, 2)
 				.map(i -> "10 / " + i + " = " + (10 / i))
 				.onErrorResume((e)-> Flux.just("None"));
 
@@ -85,6 +99,10 @@ class FluxApplicationTests {
 		flux.log().blockLast();
 	}
 
+	/**
+	 * flatMap(Publisher argFlux) -> Subscribe argFlux
+	 */
+
 	@Test
 	void testFlatMap1(){
 		String[] p1 = new String[]{"aaa", "bbb"};
@@ -92,12 +110,15 @@ class FluxApplicationTests {
 		Flux<String[]> flux = Flux.just(
 				p1, p2);
 
-		flux.log()
+		flux
 				.flatMap(x-> Flux.just(x))
-				.log()
+				.doOnNext(System.out::println)
 				.blockLast();
 	}
 
+	/**
+	 * flatMap(Publisher argFlux) -> Subscribe argFlux
+	 */
 	@Test
 	void testFlatMap2(){
 		Flux<String> flux = Flux.just(
@@ -109,6 +130,9 @@ class FluxApplicationTests {
 				.blockLast();
 	}
 
+	/**
+	 * flatMap(Publisher argFlux) -> Subscribe argFlux
+	 */
 	@Test
 	void testFlatMap3(){
 		Flux<String> flux = Flux.just(
@@ -126,6 +150,9 @@ class FluxApplicationTests {
 //		return Mono.just("OK").then();
 //	}
 
+	/**
+	 * doOnNext() never happen on Mono<Void>
+	 */
 	@Test
 	void testMonoVoid(){
 
@@ -147,13 +174,19 @@ class FluxApplicationTests {
 			.subscribe();
 	}
 
+	/**
+	 * doOnNext( λ ) do not change the element of flux
+	 *
+	 * [a1,a2, ...] -> doOnNext( λ ) -> [a1, a2, ...]
+	 */
 	@Test
 	void testDoOnNext(){
 
 		Flux<String> data = Flux.just("hello", "world");
 		data
-			.doOnNext(el->System.out.println(el))   // happen 2 times
-			.doFinally(el->System.out.println("--- done ---"))
+			.doOnNext(el->System.out.println("do1 -> " + el))   // happen 2 times
+			.doOnNext(el->System.out.println("do2 -> " + el))   // happen 2 times
+			.doFinally(el->System.out.println("--- finally done ---"))
 			.subscribe();
 	}
 }
