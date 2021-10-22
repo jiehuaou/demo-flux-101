@@ -25,7 +25,9 @@ public class FluxErrorRetryTests {
         return "Number: " + integer;
     }
 
-
+    /**
+     * retry 3 times ( totally re-run 4 times ) then throw exception
+     */
     @Test
     void testErrorRetry(){
         Flux.just( 1, 2, 3, 4, 5, 6)
@@ -46,6 +48,9 @@ public class FluxErrorRetryTests {
         log.info("test end");
     }
 
+    /**
+     * retry 1 once then success
+     */
     @Test
     void testErrorRetryConditional(){
         Flux.just( 1, 2, 3, 4, 5, 6)
