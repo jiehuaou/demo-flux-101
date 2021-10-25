@@ -15,7 +15,7 @@ import java.io.InputStream;
  * 1) open resource
  * 2) process resource (throw exception when error encounter)
  * 3) close resource
- * retry (x times)
+ * retry (x times) on error
  *
  */
 @Log4j2
@@ -79,7 +79,7 @@ public class FluxErrorRetry2Tests {
     }
 
     /**
-     * test retry without error happening
+     * retry not happening
      */
     @Test
     void testMonoNoRetry(){
