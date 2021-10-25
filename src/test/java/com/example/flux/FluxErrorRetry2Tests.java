@@ -10,71 +10,16 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * demo
+ * 1) open resource
+ * 2) process resource (throw exception when error encounter)
+ * 3) close resource
+ * retry (x times)
+ *
+ */
 @Log4j2
-public class FluxErrorRetryTests {
-
-    static int counter = 0;
-
-    static String process(Integer integer) {
-        if (integer == 5) {
-            throw new IllegalArgumentException("test exception");
-        }
-        return "Number: " + integer;
-    }
-
-    static String processConditional(Integer integer) {
-        if (integer == 5 && counter<1) {
-            counter++;
-            throw new IllegalArgumentException("test exception");
-        }
-        return "Number: " + integer;
-    }
-
-    /**
-     * retry 3 times ( totally re-run 4 times ) then throw exception
-     */
-    @Test
-    void testErrorRetry(){
-        Flux.just( 1, 2, 3, 4, 5, 6)
-                .doOnNext(x -> log.info("next1 -> {}", x))
-                .map(x -> x+1)
-                .doOnNext(x -> log.info("next2 -> {}", x))
-                .map(FluxErrorRetryTests::process)
-                .doOnError(System.err::println)
-//                 .onErrorReturn("error XXX")                         // with onErrorXXX, retry will not happen
-//                 .onErrorResume((e)->Flux.just("error XXX"))         // with onErrorXXX, retry will not happen
-                .retry(3)
-                .map(x -> x+1)
-                .doOnNext(x -> log.info("next3 -> {}", x))
-                .onErrorReturn("error XXX")                           // handle the last error after retry
-                .blockLast();
-                //.subscribe(e -> log.info("sub -> {}", e));
-
-        log.info("test end");
-    }
-
-    /**
-     * retry 1 once then success
-     */
-    @Test
-    void testErrorRetryConditional(){
-        Flux.just( 1, 2, 3, 4, 5, 6)
-                .doOnNext(x -> log.info("next1 -> {}", x))
-                .map(x -> x+1)
-                .doOnNext(x -> log.info("next2 -> {}", x))
-                .map(FluxErrorRetryTests::processConditional)
-                .doOnError(System.err::println)
-//                 .onErrorReturn("error XXX")                         // with onErrorXXX, retry will not happen
-//                 .onErrorResume((e)->Flux.just("error XXX"))         // with onErrorXXX, retry will not happen
-                .retry(3)
-                .map(x -> x+1)
-                .doOnNext(x -> log.info("next3 -> {}", x))
-                //.onErrorReturn("error XXX") // handle the last error after retry
-                .blockLast();
-        //.subscribe(e -> log.info("sub -> {}", e));
-
-        log.info("test end");
-    }
+public class FluxErrorRetry2Tests {
 
     static public void closeStream(Closeable s){
         try{
