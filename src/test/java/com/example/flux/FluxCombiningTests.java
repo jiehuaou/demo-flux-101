@@ -108,15 +108,24 @@ public class FluxCombiningTests {
         service1().doOnNext(e->log.info(e)).blockLast();
     }
 
+    /**
+     * merge ((1,2,3), (a,b,c)) --> async (1,a,2,3,b,c)
+     */
     @Test
     void testMerge(){
-        service1().flatMap(response1 -> Flux.merge(
-                service2(response1.a1),
-                service4(response1.a1)
-        ))
+        service1()
+                .flatMap(response1 -> Flux.merge(
+                        service2(response1.a1),
+                        service4(response1.a1)
+                    )
+                )
                 .doOnNext(e->log.info(e))
                 .blockLast();
     }
+
+    /**
+     * concat ((1,2,3), (a,b,c)) --> (1,2,3,a,b,c)
+     */
     @Test
     void testConcat(){
         service1().flatMap(response1 -> Flux.concat(
@@ -128,11 +137,28 @@ public class FluxCombiningTests {
     }
 
     /**
+     * combineLatest( (1,2,3), (4,5,6) ) --> (1,4), (2,4), (2,5), (3,5), (3,6)
+     */
+    @Test
+    void testCombineLatest(){
+        Flux.combineLatest(
+                Flux.just(1,2,3).delayElements(Duration.ofMillis(500)),
+                Flux.just(4,5,6).delayElements(Duration.ofMillis(550)),
+                (p1, p2)-> p1*10 + p2
+        )
+                .doOnNext(e->log.info(e))
+                //.map(x->1)
+                .reduce(0, (a,b)->a+b)
+                .doOnNext(e->log.info("total -> {}", e))
+                .block();
+    }
+
+    /**
      * 1 service1() -----> * service2() --> 1 service3()
      *                |--> 1 service4()
      */
     @Test
-    void testCombineLatest(){
+    void testComplexCombineLatest(){
         service1().flatMap(response1 -> Flux.combineLatest(
                 service2Service3(response1.a1),
                 service4(response1.a1),

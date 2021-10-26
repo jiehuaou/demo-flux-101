@@ -4,6 +4,9 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
+/**
+ * demo retry when error happen
+ */
 @Log4j2
 public class FluxErrorRetry1Tests {
 
