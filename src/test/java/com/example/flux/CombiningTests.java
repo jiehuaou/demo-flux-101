@@ -1,15 +1,14 @@
 package com.example.flux;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.*;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * class Response1{
@@ -37,18 +36,22 @@ import java.time.Duration;
  */
 
 @Log4j2
-public class FluxCombiningTests {
+public class CombiningTests {
     @Data
     @AllArgsConstructor
     @ToString
     static class Response1{
         String a1;
+        String a2;
     }
+
     @Data
     @AllArgsConstructor
     @ToString
     static class Response2{
         String b1;
+        public Response2(){
+        }
     }
     @Data
     @AllArgsConstructor
@@ -64,48 +67,80 @@ public class FluxCombiningTests {
     }
 
     @Data
-    @ToString
-    @Builder
-    static class AggResponse{
-        Response1 response1;
-        Response2 response2;
-        Response3 response3;
-        Response4 response4;
-    }
-
-    static class Pair<T1, T2>{
-        T1 data1;
-        T2 data2;
-        public Pair(T1 t1, T2 t2){
-            data1 = t1;
-            data2 = t2;
+    @ToString(callSuper=true)
+    static class AggResponse2 extends Response2{
+        List<Response3> response3s;
+        public AggResponse2(String b1, List<Response3> response3s) {
+            super(b1);
+            this.response3s = response3s;
         }
     }
 
-    static Flux<Response1> service1(){
-        return Flux.just(new Response1("a1")).delayElements(Duration.ofMillis(4));
-    }
-    static Flux<Response2> service2(String a1){
-        return Flux.just(new Response2("b1" + a1), new Response2("b2" + a1)).delayElements(Duration.ofMillis(3));
-    }
-    static Flux<Response3> service3(String b1){
-        return Flux.just(new Response3("c1" + b1)).delayElements(Duration.ofMillis(5));
-    }
-    static Flux<Response4> service4(String a2){
-        return Flux.just(new Response4("c1" + a2)).delayElements(Duration.ofMillis(8));
+    @Data
+    @ToString
+    @Builder
+    static class FinalResponse {
+        final String a1;
+        final String a2;
+        final String d1;
+        final List<AggResponse2> response2s;
     }
 
-    static Flux<Pair<Response2, Response3>> service2Service3(String a1){
+    static Flux<Response1> service1(){
+        //
+        return Flux
+                .just(new Response1("a1", "a2"))
+                .delayElements(Duration.ofMillis(4));
+    }
+    static Flux<Response2> service2(String a1){
+        //
+        return Flux
+                .just(new Response2("b1-" + a1), new Response2("b2-" + a1))
+                .delayElements(Duration.ofMillis(3));
+    }
+    static Flux<Response3> service3(String b1){
+        //
+        return Flux
+                .just(new Response3("c1-" + b1), new Response3("c2-" + b1))
+                .delayElements(Duration.ofMillis(5));
+    }
+    static Mono<Response4> service4(String a2){
+        //
+        return Mono
+                .just(new Response4("d1-" + a2))
+                .delayElement(Duration.ofMillis(8));
+    }
+
+    static Flux<AggResponse2> service2Service3(String a1){
         return service2(a1)
-                .flatMap(x2->service3(x2.b1)
-                        .map(x3->new Pair<>(x2, x3))
-                )
-        ;
+                .flatMap(
+                        x2->service3(x2.b1)
+                                .collectList()
+                                .map(x3->new AggResponse2(x2.b1, x3))
+                );
+    }
+
+    @Test
+    void testService2Service3(){
+
+        AggResponse2 agg = new AggResponse2("xx", null);
+        agg.setB1("bb");
+        //
+        service2Service3("a1")
+                .doOnNext(e->log.info(e))
+                .blockLast();
     }
 
     @Test
     void test1(){
-        service1().doOnNext(e->log.info(e)).blockLast();
+        //
+        service1()
+                .doOnNext(e->log.info(e))
+                .blockLast();
+
+        service2("a1")
+                .doOnNext(e->log.info(e))
+                .blockLast();
     }
 
     /**
@@ -154,27 +189,33 @@ public class FluxCombiningTests {
     }
 
     /**
-     * 1 service1() -----> * service2() --> 1 service3()
+     * service1() 1 -----> * service2() 1 --> * service3()
      *                |--> 1 service4()
      */
     @Test
     void testComplexCombineLatest(){
+        ObjectMapper objectMapper = new ObjectMapper();
         service1().flatMap(response1 -> Flux.combineLatest(
-                service2Service3(response1.a1),
-                service4(response1.a1),
-                (pair, p4)->{
+                service2Service3(response1.a1).collectList(), // call service2 which call service3
+                service4(response1.a2),                       // call service4
+                (aggResponse2, p4)->{
                     //log.info(agg);
                     //log.info(p4);
-                    AggResponse agg = AggResponse.builder()
-                            .response1(response1)
-                            .response4(p4)
-                            .response2(pair.data1)
-                            .response3(pair.data2)
+                    FinalResponse agg = FinalResponse.builder()
+                            .a1(response1.a1)
+                            .a2(response1.a2)
+                            .d1(p4.d1)
+                            .response2s(aggResponse2)
                             .build();
                     return agg;
-                }
-        ))
-                .doOnNext(e->log.info(e))
-                .blockLast();
+                })
+            ).doOnNext(e->{
+                    try {
+                        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(e);
+                        System.out.println("JSON = " + json);
+                    } catch (Exception ex) {
+                        //e.printStackTrace();
+                    }
+            }).blockLast();
     }
 }
