@@ -1,5 +1,6 @@
 package com.example.flux;
 
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -10,8 +11,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
-
+@Log4j2
 public class BackpressureTests {
     @Test
     void testBackpressure1(){
@@ -48,19 +51,22 @@ public class BackpressureTests {
                 });
     }
 
+    /**
+     * park up to maxSize elements when not enough demand is requested downstream.
+     * without onBackpressureBuffer() --> "OverflowException: Could not emit tick NNN due to lack of requests"
+     */
     @Test
     void testParallelWithBackpressureBuffer(){
         System.out.println("Main thread: " + Thread.currentThread());
         Flux<String> tick = Flux.interval(Duration.ofMillis(10))
-                .take(6)
-                //.doOnNext(x->log.info("next ... {}", x))
-                .onBackpressureBuffer(6)
+                .onBackpressureBuffer(10) // backpressure strategy
                 .flatMap(i-> Mono.fromCallable(()->{
                             System.out.println("simulate IO " + Thread.currentThread() + "  " + i);
-                            sleep(1500L); // simulate IO delay, very slow
+                            sleep(1000L); // simulate IO delay, very slow
                             return String.format("String %d", i);
                         }).subscribeOn(Schedulers.boundedElastic())
-                        , 3);
+                        , 3)
+                .take(10);
 
         Disposable disposable = tick.subscribe(x ->System.out.println("Subscribe thread: " + Thread.currentThread() + "  --> " + x),
                 System.out::println,
@@ -74,11 +80,82 @@ public class BackpressureTests {
 
     }
 
+    /**
+     * simulate slow IO delay,
+     */
+    public static Mono<String> asyncTask(Integer i) {
+        return Mono.fromCallable(()->{
+            System.out.println("simulate IO " + Thread.currentThread() + " -- " + i);
+            sleep(1000L); // simulate IO delay, very slow
+            return String.format("Text %d", i);
+        });
+    }
+
     public static void sleep(long timeMilli) {
         try {
             Thread.sleep(timeMilli);
         } catch (InterruptedException e) {
             System.out.println("Exiting");
         }
+    }
+
+    public static void wait(Disposable disposable) {
+        while (!disposable.isDisposed()){
+            System.out.println("...");
+            sleep(800);
+        }
+    }
+
+    /**
+     * limit rate
+     */
+    @Test
+    void testLimitRate(){
+        Flux.range(1,250)
+                .log()
+                .limitRate(10)
+                //.flatMap(x->asyncTask(x).subscribeOn(Schedulers.boundedElastic()), 5)
+                // .doOnNext(x->log.info(x))
+                .blockLast();
+    }
+
+    /**
+     * drop event when overflow occur.
+     */
+    @Test
+    void testDropEventOnTooMuch(){
+
+        Disposable disposable = Flux.interval(Duration.ofMillis(1))
+                .onBackpressureDrop(x->log.warn(" drop event ========> {}", x))
+                .flatMap(x->asyncTask(x.intValue()).subscribeOn(Schedulers.boundedElastic()))
+                .subscribe();
+
+        wait(disposable);
+    }
+
+    /**
+     * repeat async task 10 times
+     */
+    @Test
+    void testRepeatTask(){
+
+        Disposable disposable = Mono.defer(()->asyncTask(1))
+                .delayElement(Duration.ofMillis(100))
+                .repeat(10)
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(s->log.info(s));
+
+        wait(disposable);
+    }
+
+    /**
+     * convert Mono<List<String>> to Flux<String>
+     */
+    @Test
+    void testConvert(){
+        List<String> data = Arrays.asList("111", "222");
+        Mono<List<String>> ls = Mono.just(data);
+        ls.flatMapMany(ss ->Flux.fromIterable(ss))
+                .subscribe(s->log.info(s));
     }
 }
