@@ -1,16 +1,20 @@
 package com.example.flux;
 
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-@SpringBootTest
+//@SpringBootTest
+@Log4j2
 public class FluxParallelTests {
 
 
@@ -27,23 +31,41 @@ public class FluxParallelTests {
 
     @Test
     void testParallelThenBlock(){
-        CountDownLatch latch = new CountDownLatch(1);
+        //CountDownLatch latch = new CountDownLatch(1);
 
 
             Flux.range(1, 15)
                 .parallel(3)
-                .runOn(Schedulers.elastic())
+                .runOn(Schedulers.boundedElastic())
                 .doOnNext(i -> {
                     {
-                        System.out.println(String.format("Executing %s on thread %s", i, Thread.currentThread().getName()));
+                        log.info("task {} -- start", i);
                         doSomething();
-                        System.out.println(String.format("Finish executing %s", i));
+                        log.info("task {} *** stop ", i);
                     }
                 })
                 .sequential()
-                .doOnNext(System.out::println)
+                .doOnNext(x->log.info("task {} in sequential ", x))
                 .blockLast();
     }
+
+    @Test
+    void testParallel2ThenBlock(){
+        //CountDownLatch latch = new CountDownLatch(1);
+
+        Flux.range(1, 10)
+                .flatMap(i -> Mono.fromCallable(()->{
+                        log.info("task {} -- start", i);
+                        doSomething();
+                        log.info("task {} *** stop ", i);
+                        return i;
+                      }).subscribeOn(Schedulers.boundedElastic())
+                , 4)
+                //.subscribeOn(Schedulers.boundedElastic())
+               // .doOnNext(x->log.info("task {} in sequential ", x))
+                .blockLast();
+    }
+
 
     @Test
     void testParallelThenWait(){
@@ -54,9 +76,9 @@ public class FluxParallelTests {
                 .runOn(Schedulers.boundedElastic())
                 .doOnNext(i -> {
                     {
-                        System.out.println(String.format("Executing %s on thread %s", i, Thread.currentThread().getName()));
+                        log.info("task {} -- start", i);
                         doSomething();
-                        System.out.println(String.format("Finish executing %s", i));
+                        log.info("task {} *** stop ", i);
                     }
                 })
                 .sequential()
@@ -72,5 +94,7 @@ public class FluxParallelTests {
             e.printStackTrace();
         }
     }
+
+
 
 }

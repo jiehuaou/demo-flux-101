@@ -6,9 +6,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 //@SpringBootTest
-public class WrappingSynchronousTests {
+public class MonoCallableTests {
     @Test
     void testWrappingSynchronous(){
+
         Mono blockingWrapper = Mono.fromCallable(() -> {
             return 20 * 30;
         });

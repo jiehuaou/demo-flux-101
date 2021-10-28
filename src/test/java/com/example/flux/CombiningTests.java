@@ -144,14 +144,26 @@ public class CombiningTests {
     }
 
     /**
+     * zip ( (1,2,3), (a, b) ) --> (1, a) (2, b)
+     */
+    @Test
+    void testZip(){
+        Flux
+                .zip(Flux.just(1,2,3), Flux.just("a", "b"))
+                .doOnNext(x->{
+                    log.info("{} AND {}", x.get(0), x.get(1));
+                }).blockLast();
+    }
+
+    /**
      * merge ((1,2,3), (a,b,c)) --> async (1,a,2,3,b,c)
      */
     @Test
     void testMerge(){
         service1()
                 .flatMap(response1 -> Flux.merge(
-                        service2(response1.a1),
-                        service4(response1.a1)
+                        Flux.just(1,2,3), Flux.just("a", "b")
+//                        service2(response1.a1), service4(response1.a1)
                     )
                 )
                 .doOnNext(e->log.info(e))
@@ -198,13 +210,13 @@ public class CombiningTests {
         service1().flatMap(response1 -> Flux.combineLatest(
                 service2Service3(response1.a1).collectList(), // call service2 which call service3
                 service4(response1.a2),                       // call service4
-                (aggResponse2, p4)->{
+                (aggResponse2, response4)->{
                     //log.info(agg);
-                    //log.info(p4);
+                    //log.info(response4);
                     FinalResponse agg = FinalResponse.builder()
                             .a1(response1.a1)
                             .a2(response1.a2)
-                            .d1(p4.d1)
+                            .d1(response4.d1)
                             .response2s(aggResponse2)
                             .build();
                     return agg;

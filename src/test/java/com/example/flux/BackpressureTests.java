@@ -4,9 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.springframework.boot.test.context.SpringBootTest;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-@SpringBootTest
+import java.time.Duration;
+
+
 public class BackpressureTests {
     @Test
     void testBackpressure1(){
@@ -41,5 +46,39 @@ public class BackpressureTests {
                         System.out.println("onComplete");
                     }
                 });
+    }
+
+    @Test
+    void testParallelWithBackpressureBuffer(){
+        System.out.println("Main thread: " + Thread.currentThread());
+        Flux<String> tick = Flux.interval(Duration.ofMillis(10))
+                .take(6)
+                //.doOnNext(x->log.info("next ... {}", x))
+                .onBackpressureBuffer(6)
+                .flatMap(i-> Mono.fromCallable(()->{
+                            System.out.println("simulate IO " + Thread.currentThread() + "  " + i);
+                            sleep(1500L); // simulate IO delay, very slow
+                            return String.format("String %d", i);
+                        }).subscribeOn(Schedulers.boundedElastic())
+                        , 3);
+
+        Disposable disposable = tick.subscribe(x ->System.out.println("Subscribe thread: " + Thread.currentThread() + "  --> " + x),
+                System.out::println,
+                ()-> System.out.println("Done"));
+
+        while(!disposable.isDisposed()){
+            sleep(800);
+            System.out.println("..wait..");
+        }
+        System.out.println("DONE AND DONE");
+
+    }
+
+    public static void sleep(long timeMilli) {
+        try {
+            Thread.sleep(timeMilli);
+        } catch (InterruptedException e) {
+            System.out.println("Exiting");
+        }
     }
 }
