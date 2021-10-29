@@ -154,8 +154,12 @@ public class BackpressureTests {
     @Test
     void testConvert(){
         List<String> data = Arrays.asList("111", "222");
+
         Mono<List<String>> ls = Mono.just(data);
-        ls.flatMapMany(ss ->Flux.fromIterable(ss))
+
+        Flux<String> fs = ls.flatMapMany(ss ->Flux.fromIterable(ss));
+
+        fs
                 .subscribe(s->log.info(s));
     }
 }
