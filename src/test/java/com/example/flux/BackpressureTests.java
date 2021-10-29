@@ -14,8 +14,14 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.example.flux.Helper.sleep;
+import static com.example.flux.Helper.waiting;
+
 @Log4j2
 public class BackpressureTests {
+    /**
+     * consumer with request(N)
+     */
     @Test
     void testBackpressure1(){
 
@@ -72,10 +78,7 @@ public class BackpressureTests {
                 System.out::println,
                 ()-> System.out.println("Done"));
 
-        while(!disposable.isDisposed()){
-            sleep(800);
-            System.out.println("..wait..");
-        }
+        waiting(disposable);
         System.out.println("DONE AND DONE");
 
     }
@@ -91,20 +94,7 @@ public class BackpressureTests {
         });
     }
 
-    public static void sleep(long timeMilli) {
-        try {
-            Thread.sleep(timeMilli);
-        } catch (InterruptedException e) {
-            System.out.println("Exiting");
-        }
-    }
 
-    public static void wait(Disposable disposable) {
-        while (!disposable.isDisposed()){
-            System.out.println("...");
-            sleep(800);
-        }
-    }
 
     /**
      * limit rate
@@ -130,7 +120,7 @@ public class BackpressureTests {
                 .flatMap(x->asyncTask(x.intValue()).subscribeOn(Schedulers.boundedElastic()))
                 .subscribe();
 
-        wait(disposable);
+        waiting(disposable);
     }
 
     /**
@@ -145,21 +135,8 @@ public class BackpressureTests {
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(s->log.info(s));
 
-        wait(disposable);
+        waiting(disposable);
     }
 
-    /**
-     * convert Mono<List<String>> to Flux<String>
-     */
-    @Test
-    void testConvert(){
-        List<String> data = Arrays.asList("111", "222");
 
-        Mono<List<String>> ls = Mono.just(data);
-
-        Flux<String> fs = ls.flatMapMany(ss ->Flux.fromIterable(ss));
-
-        fs
-                .subscribe(s->log.info(s));
-    }
 }
