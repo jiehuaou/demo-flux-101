@@ -5,13 +5,12 @@ import org.junit.jupiter.api.Test;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static com.example.flux.Helper.*;
-import static com.example.flux.Helper.mockTaskSchedule;
+import static com.example.flux.Task.*;
+import static com.example.flux.Task.singleTaskSchedule;
 
 @Log4j2
 public class ConvertingTests {
@@ -52,10 +51,10 @@ public class ConvertingTests {
     void testMonoThenEmpty(){
         Mono<String> mo = Mono.just("hello");
         Disposable disposable = mo
-                .thenEmpty(mockTaskSchedule("A").then())
-                .thenEmpty(mockTaskSchedule("B").then())
-                .thenEmpty(mockTaskSchedule("C").then())
-                .thenEmpty(mockTaskSchedule("D").then())
+                .thenEmpty(singleTaskSchedule("A").then())
+                .thenEmpty(singleTaskSchedule("B").then())
+                .thenEmpty(singleTaskSchedule("C").then())
+                .thenEmpty(singleTaskSchedule("D").then())
                 .doOnNext(x->log.info(x)) // never happen here
                 .doFinally(x->log.info("---end---"))
                 //.subscribeOn(Schedulers.boundedElastic())
@@ -71,12 +70,12 @@ public class ConvertingTests {
      */
     @Test
     void testMonoThenMany1(){
-        Mono<String> mo = mockTaskSchedule("A");
+        Mono<String> mo = singleTaskSchedule("A");
 
         Flux<String> ret = mo.thenMany(
                 Flux.merge(
-                        mockTaskSchedule("B"),
-                        mockTaskSchedule("C")
+                        singleTaskSchedule("B"),
+                        singleTaskSchedule("C")
                 )
         );
 
@@ -87,7 +86,7 @@ public class ConvertingTests {
 
     @Test
     void testMonoThenMany2(){
-        Mono<String> mo = mockTaskSchedule("A");
+        Mono<String> mo = singleTaskSchedule("A");
 
         Flux<String> ret = mo.thenMany(
                 multiTaskSchedule("B", "C")

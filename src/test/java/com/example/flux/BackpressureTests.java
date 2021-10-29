@@ -4,18 +4,15 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
 
-import static com.example.flux.Helper.sleep;
-import static com.example.flux.Helper.waiting;
+import static com.example.flux.Task.sleeping;
+import static com.example.flux.Task.waiting;
 
 @Log4j2
 public class BackpressureTests {
@@ -68,7 +65,7 @@ public class BackpressureTests {
                 .onBackpressureBuffer(10) // backpressure strategy
                 .flatMap(i-> Mono.fromCallable(()->{
                             System.out.println("simulate IO " + Thread.currentThread() + "  " + i);
-                            sleep(1000L); // simulate IO delay, very slow
+                            sleeping(1000L); // simulate IO delay, very slow
                             return String.format("String %d", i);
                         }).subscribeOn(Schedulers.boundedElastic())
                         , 3)
@@ -89,7 +86,7 @@ public class BackpressureTests {
     public static Mono<String> asyncTask(Integer i) {
         return Mono.fromCallable(()->{
             System.out.println("simulate IO " + Thread.currentThread() + " -- " + i);
-            sleep(1000L); // simulate IO delay, very slow
+            sleeping(1000L); // simulate IO delay, very slow
             return String.format("Text %d", i);
         });
     }
@@ -111,6 +108,7 @@ public class BackpressureTests {
 
     /**
      * drop event when overflow occur.
+     * you can see drop event after some time.
      */
     @Test
     void testDropEventOnTooMuch(){
@@ -120,7 +118,7 @@ public class BackpressureTests {
                 .flatMap(x->asyncTask(x.intValue()).subscribeOn(Schedulers.boundedElastic()))
                 .subscribe();
 
-        waiting(disposable);
+        waiting(disposable, 1000 * 3);
     }
 
     /**

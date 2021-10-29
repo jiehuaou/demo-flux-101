@@ -8,8 +8,8 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 
 
-public class Helper {
-    public static void sleep(long timeMilli) {
+public class Task {
+    public static void sleeping(long timeMilli) {
         try {
             Thread.sleep(timeMilli);
         } catch (InterruptedException e) {
@@ -20,17 +20,28 @@ public class Helper {
     public static void waiting(Disposable disposable) {
         while (!disposable.isDisposed()){
             System.out.println("...");
-            sleep(1500);
+            sleeping(1500);
+        }
+    }
+
+    public static void waiting(Disposable disposable, long expiredMilliSecond) {
+        long t1 = System.currentTimeMillis();
+        while (!disposable.isDisposed()){
+            if((System.currentTimeMillis()-t1)>expiredMilliSecond){
+                break;
+            }
+            System.out.println("...");
+            sleeping(1500);
         }
     }
 
     /**
      * simulate slow IO task,
      */
-    public static Mono<String> mockTask(String s) {
+    public static Mono<String> singleTask(String s) {
         return Mono.fromCallable(()->{
             System.out.println("mock IO " + Thread.currentThread() + " -- " + s);
-            sleep(1000L); // simulate IO task, very slow
+            sleeping(1000L); // simulate IO task, very slow
             return String.format("Text %s", s);
         });
     }
@@ -38,9 +49,9 @@ public class Helper {
     /**
      * simulate slow IO task on other schedule
      */
-    public static Mono<String> mockTaskSchedule(String s) {
+    public static Mono<String> singleTaskSchedule(String s) {
         return Mono
-                .defer(()->mockTask(s))
+                .defer(()->singleTask(s))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
