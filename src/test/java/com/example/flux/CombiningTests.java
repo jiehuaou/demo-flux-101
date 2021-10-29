@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+
+import static com.example.flux.Task.singleTaskSchedule;
+import static com.example.flux.Task.waiting;
 
 /**
  * class Response1{
@@ -198,6 +202,21 @@ public class CombiningTests {
                 .reduce(0, (a,b)->a+b)
                 .doOnNext(e->log.info("total -> {}", e))
                 .block();
+    }
+
+    /**
+     * combine ( Mono A , Mono B ) --> Mono C
+     */
+    @Test
+    void testCombine2Mono(){
+        Disposable disposable = Flux.combineLatest(
+                singleTaskSchedule("A"),
+                singleTaskSchedule("B"),
+                (a,b)-> a+"+"+b
+        )
+                .next()
+                .subscribe(s->log.info(s));
+        waiting(disposable);
     }
 
     /**
