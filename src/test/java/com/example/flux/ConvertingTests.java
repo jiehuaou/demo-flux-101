@@ -97,4 +97,26 @@ public class ConvertingTests {
 
     }
 
+    @Test
+    void testFlux2Mono(){
+        Flux<String> flux = Flux.just("A", "B", "C");
+
+        Mono first = flux.next();
+        first.subscribe(s->log.info("first --> {}", s));
+
+        Mono last = flux.last();
+        last.subscribe(s->log.info("last --> {}", s));
+
+        Mono single = flux.next().switchIfEmpty(Mono.just("not-found"));
+        single.subscribe(s->log.info("single --> {}", s));
+    }
+
+    @Test
+    void testFlux2Mono2(){
+        Flux<String> flux = Flux.just("A");
+        // flux contain single element
+        Mono single = flux.single("default if not-found");
+        single.subscribe(s->log.info("single --> {}", s));
+    }
+
 }
