@@ -11,8 +11,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 
-import static com.example.flux.Task.singleTaskSchedule;
-import static com.example.flux.Task.waiting;
+import static com.example.flux.Task.*;
 
 /**
  * class Response1{
@@ -210,8 +209,8 @@ public class CombiningTests {
     @Test
     void testCombine2Mono(){
         Disposable disposable = Flux.combineLatest(
-                singleTaskSchedule("A"),
-                singleTaskSchedule("B"),
+                singleTaskDefer("A"),
+                singleTaskDefer("B"),
                 (a,b)-> a+"+"+b
         )
                 .next()

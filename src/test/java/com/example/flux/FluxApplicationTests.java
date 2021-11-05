@@ -194,4 +194,16 @@ class FluxApplicationTests {
 			.doFinally(el->System.out.println("--- finally done ---"))
 			.subscribe();
 	}
+
+	@Test
+	void testFinally(){
+		Flux.just("1", "2")
+				.concatWith(Flux.error(new Exception("hello")))  // will terminate here
+
+				.concatWith(Flux.just("3"))                             // will not be executed for exception
+				.doOnComplete(()-> System.out.println("doOnComplete"))  // will not be executed for exception
+				.doFinally(t-> System.out.println("doFinally  ---->  " + t))
+				.onErrorReturn("world")
+				.subscribe(System.out::println);
+	}
 }
