@@ -56,7 +56,7 @@ public class FluxFromTests {
     }
 
     @Test
-    public void testFromIter(){
+    public void testFromIterable(){
         List<Person> iter = Arrays.asList(
                 new Person(1, "Name01", "Surname01"),
                 new Person(2, "Name02", "Surname02"),

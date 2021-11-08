@@ -52,4 +52,23 @@ public class MonoDeferTests {
                 .doOnNext(s->log.info(s))
                 .block();
     }
+
+    @Test
+    void testDeferSwitchEmpty(){
+        simple("hello")
+                .switchIfEmpty(Mono.defer(()->simple("not-found"))) // this simple() not happen.
+                .doFinally(f->log.info("do finally"))
+                .block();
+    }
+    @Test
+    void testSwitchEmpty(){
+        simple("hello")
+                .switchIfEmpty(simple("not-found"))   // this simple() always happen even if publisher has data.
+                .doFinally(f->log.info("do finally"))
+                .block();
+    }
+
+    public static Mono<String> emptyMono() {
+        return Mono.empty();
+    }
 }
