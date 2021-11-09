@@ -1,43 +1,58 @@
 package com.example.flux;
 
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-//@SpringBootTest
-public class FlusScheduleTests {
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 
+@Log4j2
+public class FluxScheduleTests {
+
+    /**
+     * first subscribeOn(schedulerA) normally affect all operation
+     * subsequent subscribeOn does not take effect
+     * subsequent publishOn will affect following operator
+     *
+     */
     @Test
     public void publishSubscribeExample() {
         Scheduler schedulerA = Schedulers.newParallel("Scheduler A");
         Scheduler schedulerB = Schedulers.newParallel("Scheduler B");
         Scheduler schedulerC = Schedulers.newParallel("Scheduler C");
-        Flux.just("x").log()
+        Flux.just("x")
                 .map(i -> {
                     System.out.println("First map: " + Thread.currentThread().getName());
-                    return i;
-                }).log()
-                .subscribeOn(schedulerA)
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
+                    return i; // Scheduler A
+                })
+                .subscribeOn(schedulerA) // first subscribeOn() affect all normally
                 .map(i -> {
                     System.out.println("Second map: " + Thread.currentThread().getName());
-                    return i;
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
+                    return i;  // Scheduler A
                 })
-                .publishOn(schedulerB)
+                .publishOn(schedulerB) // this publishOn change the schedule of previous subscribeOn()
                 .map(i -> {
                     System.out.println("Third map: " + Thread.currentThread().getName());
-                    return i;
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler B"));
+                    return i; // Scheduler B
                 })
-                .subscribeOn(schedulerC)
+                .subscribeOn(schedulerC) // subsequent subscribeOn does not take effect
                 .map(i -> {
                     System.out.println("Fourth map: " + Thread.currentThread().getName());
-                    return i;
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler B"));
+                    return i; // Scheduler B
                 })
                 .publishOn(schedulerA)
                 .map(i -> {
                     System.out.println("Fifth map: " + Thread.currentThread().getName());
-                    return i;
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
+                    return i; // Scheduler A
                 })
                 .blockLast();
     }
@@ -50,11 +65,13 @@ public class FlusScheduleTests {
         Flux.range(1, 2)
                 .map(i -> {
                     System.out.println(String.format("First map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("main"));
                     return i;
                 })
                 .publishOn(schedulerA)
                 .map(i -> {
                     System.out.println(String.format("Second map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
                 .blockLast();
@@ -67,16 +84,18 @@ public class FlusScheduleTests {
         Flux.range(1, 2)
                 .map(i -> {
                     System.out.println(String.format("First map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
                 .subscribeOn(schedulerA)
                 .map(i -> {
                     System.out.println(String.format("Second map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
                 .blockLast();
     }
-    // apply the closest one
+    // If you define multiple publishOn, It affects subsequent operators after publishOn
     @Test
     void testMultiPubOn(){
         Scheduler schedulerA = Schedulers.newParallel("Scheduler A");
@@ -85,16 +104,19 @@ public class FlusScheduleTests {
         Flux.range(1, 2)
                 .map(i -> {
                     System.out.println(String.format("First map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("main"));
                     return i;
                 })
-                .publishOn(schedulerA)
+                .publishOn(schedulerA) // affect subsequent operators
                 .map(i -> {
                     System.out.println(String.format("Second map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
-                .publishOn(schedulerB)
+                .publishOn(schedulerB) // affect subsequent operators
                 .map(i -> {
                     System.out.println(String.format("Third map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler B"));
                     return i;
                 })
                 .blockLast();
@@ -109,16 +131,19 @@ public class FlusScheduleTests {
         Flux.range(1, 2)
                 .map(i -> {
                     System.out.println(String.format("First map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
-                .subscribeOn(schedulerA)
+                .subscribeOn(schedulerA) // first subscribeOn affects all operators
                 .map(i -> {
                     System.out.println(String.format("Second map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
-                .subscribeOn(schedulerB)
+                .subscribeOn(schedulerB) // second subscribeOn(scheduler-B) is ignored
                 .map(i -> {
                     System.out.println(String.format("Third map - (%s), Thread: %s", i, Thread.currentThread().getName()));
+                    assertThat(Thread.currentThread().getName(), containsString("Scheduler A"));
                     return i;
                 })
                 .blockLast();

@@ -23,7 +23,7 @@ public class ConvertingTests {
      *
      */
     @Test
-    void testConvert(){
+    void testMono2Flux(){
         List<String> data = Arrays.asList("111", "222");
 
         Mono<List<String>> ls = Mono.just(data);
@@ -139,6 +139,15 @@ public class ConvertingTests {
                 .subscribe(x->log.info(x));
     }
 
-
+    /**
+     * converting: Mono(value) -> Flux(value1, value2)
+     */
+    @Test
+    void testMono2Flux2(){
+        Mono<String> mono = Mono.just("A");
+        mono
+                .flatMapMany(x->Flux.just(x + "1", x + "2", x + "3"))
+                .subscribe(x->log.info(x));
+    }
 
 }
