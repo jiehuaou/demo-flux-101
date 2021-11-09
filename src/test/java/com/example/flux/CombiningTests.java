@@ -204,7 +204,7 @@ public class CombiningTests {
     }
 
     /**
-     * combine ( Mono A , Mono B ) --> Mono C
+     * combineLatest ( Mono A , Mono B ) --> Mono C
      */
     @Test
     void testCombine2Mono(){
@@ -215,6 +215,22 @@ public class CombiningTests {
         )
                 .next()
                 .subscribe(s->log.info(s));
+        waiting(disposable);
+    }
+
+    /**
+     * Mono.when ( Mono A , Mono B ) --> Mono<void>
+     * waiting Mono A & B finished, all their result will be ignored.
+     */
+    @Test
+    void testWhen2Mono(){
+        Disposable disposable = Mono.when(
+                    singleTaskDefer("A"),
+                    singleTaskDefer("B")
+                )
+                .doOnNext(s->log.info(s)) // nothing to be printed
+                .doFinally((end)->log.info("--- end ---"))
+                .subscribe();
         waiting(disposable);
     }
 

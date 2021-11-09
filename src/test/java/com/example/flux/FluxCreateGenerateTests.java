@@ -17,7 +17,12 @@ import java.util.stream.IntStream;
 public class FluxCreateGenerateTests {
 
     /**
-     * Flux.create() : Consumer can emit N elements immediately
+     * Flux.create() :
+     *
+     * 1. Consumer can emit N elements immediately,
+     * 2. Publisher is not aware of downstream state,
+     * 3. So we need to provide Overflow strategy as an additional parameter,
+     * we could even keep on emitting elements using multiple threads if required
      */
     @Test
     void testFluxCreate1(){

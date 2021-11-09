@@ -128,6 +128,17 @@ public class ConvertingTests {
         single.subscribe(s->log.info("single --> {}", s));
     }
 
+    /**
+     * converting: Flux(value) -> Flux(value1, value2)
+     */
+    @Test
+    void testFlux2Flux(){
+        Flux<String> flux = Flux.just("A", "B");
+        flux
+                .flatMap(x->Flux.just(x + "1", x + "2"))
+                .subscribe(x->log.info(x));
+    }
+
 
 
 }
