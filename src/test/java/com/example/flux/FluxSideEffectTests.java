@@ -25,7 +25,7 @@ public class FluxSideEffectTests {
      */
     public static Flux<String> makeData(String label) {
         Random random = new Random();
-        int size = 3 + random.nextInt(1000) / 100;
+        int size = 1 + random.nextInt(1000) / 100;
         log.info("random[label:{}] --> {}", label, size);
         AtomicLong counter = new AtomicLong(0);  // this value could be incorrect if makeData() is subscribed twice.
         return Flux
@@ -83,6 +83,51 @@ public class FluxSideEffectTests {
 
         Task.waiting(disposable1);
         Task.waiting(disposable2);
+    }
+
+    /**
+     * 1. like   doOnNext(), delayUntil(e->publisher) does not change the element;
+     * 2. unlike doOnNext(), delayUntil(e->publisher) will wait until the publisher finished or exception;
+     */
+    @Test
+    void testFluxDelayUntil() {
+
+        Flux.just("1","2")
+                .delayUntil(e->Task.simpleMono(e))     // do not change the stream element
+                .doOnNext(s->log.info("next {}", s))
+                .doFinally(f->log.info("do finally"))
+                .blockLast();
+
+        log.info("--- test end ---");
+    }
+
+    @Test
+    void testMonoDelayUntil() {
+        Task.simpleMono("hello")
+                .delayUntil(e->Task.simpleMono(e+"-ex1"))   // do not change the stream element
+                .delayUntil(e->Task.simpleMono(e+"-ex2"))   // do not change the stream element
+                //.delayUntil(e->simple(e+"-error"))
+                .doOnNext(s->log.info("next {}", s))
+                .doFinally(f->log.info("do finally"))
+                .block();
+
+        log.info("--- test end ---");
+    }
+
+    /**
+     * delayUntil(e->publisher) Error could propagate immediately to downstream.
+     */
+    @Test
+    void testMonoDelayUntilException() {
+        Task.simpleMono("hello")
+                .delayUntil(e->Task.simpleMono(e+"-ex1"))
+                .delayUntil(e->Task.simpleMono(e+"-ex2"))
+                .delayUntil(e->Task.simpleMono(e+"-error"))  // this could cause abort
+                .doOnNext(s->log.info("next {}", s))
+                .doFinally(f->log.info("do finally"))
+                .block();
+
+        log.info("--- test end ---");
     }
 
 }

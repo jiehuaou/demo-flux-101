@@ -47,11 +47,11 @@ public class Task {
      * this task will be executed immediately/eagerly
      *
      */
-    public static Mono<String> simpleTask(String s) {
-        log.info("mock IO " + Thread.currentThread() + " -- " + s);
-        Task.sleeping(1000L); // simulate IO task, very slow
-        return Mono.just(String.format("Text %s", s));
-    }
+//    public static Mono<String> simpleTask(String s) {
+//        log.info("mock IO " + Thread.currentThread() + " -- " + s);
+//        Task.sleeping(1000L); // simulate IO task, very slow
+//        return Mono.just(String.format("Text %s", s));
+//    }
 
     /**
      * simulate slow IO task,<br>
@@ -98,5 +98,19 @@ public class Task {
                 })
                 .delayElements(Duration.ofMillis(100))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    /**
+     * simple Mono
+     */
+    public static Mono<String> simpleMono(String s) {
+
+        log.info("mock IO " + Thread.currentThread() + " -- " + s + "  happening");
+        Task.sleeping(500L); // simulate IO task, very slow
+        if(s.contains("error")){
+            throw new RuntimeException("Foo Error");
+        }
+        return Mono.just(String.format("Text %s", s));
+
     }
 }

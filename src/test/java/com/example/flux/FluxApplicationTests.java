@@ -64,7 +64,7 @@ class FluxApplicationTests {
 	}
 
 	/**
-	 * onErrorResume(Publisher argFlux) -> Subscribe argFlux
+	 * Flux<T>.onErrorResume(e->publisher) --> Subscribe publisher -> Flux<T>
 	 */
 	@Test
 	public void onErrorResumeExample() {
@@ -105,7 +105,7 @@ class FluxApplicationTests {
 	}
 
 	/**
-	 * flatMap(Publisher argFlux) -> Subscribe argFlux
+	 * Flux<T1>.flatMap(e->publisher<T2>(e)) --> Subscribe publisher -> Flux<T2>
 	 */
 
 	@Test
@@ -122,7 +122,7 @@ class FluxApplicationTests {
 	}
 
 	/**
-	 * flatMap(Publisher argFlux) -> Subscribe argFlux
+	 *  Flux<T1>.flatMap(e->publisher<T2>(e)) --> Subscribe publisher -> Flux<T2>
 	 */
 	@Test
 	void testFlatMap2(){
@@ -196,7 +196,7 @@ class FluxApplicationTests {
 	}
 
 	@Test
-	void testFinally(){
+	void testCompleteFinally(){
 		Flux.just("1", "2")
 				.concatWith(Flux.error(new Exception("hello")))  // will terminate here
 
