@@ -11,7 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
 @Log4j2
-public class FluxScheduleTests {
+public class ScheduleTests {
 
     /**
      * first subscribeOn(schedulerA) normally affect all operation

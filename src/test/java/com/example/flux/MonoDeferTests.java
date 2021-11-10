@@ -35,7 +35,7 @@ public class MonoDeferTests {
     }
 
     /**
-     * defer task will be executed twice.
+     * defer task will be executed twice here.
      */
     @Test
     void testMonoDefer(){
@@ -53,6 +53,9 @@ public class MonoDeferTests {
                 .block();
     }
 
+    /**
+     * defer() can be used in switchIfEmpty() to avoid executing in advance.
+     */
     @Test
     void testDeferSwitchEmpty(){
         simple("hello")
