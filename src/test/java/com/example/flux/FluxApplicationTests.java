@@ -1,14 +1,17 @@
 package com.example.flux;
 
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
-//@SpringBootTest
+@Log4j2
 class FluxApplicationTests {
 
 	@Test
@@ -205,5 +208,33 @@ class FluxApplicationTests {
 				.doFinally(t-> System.out.println("doFinally  ---->  " + t))
 				.onErrorReturn("world")
 				.subscribe(System.out::println);
+	}
+
+	/**
+	 * flux.handle() == map() and filter()
+	 */
+	@Test
+	void testHandle(){
+		Map<Integer, String> store = new HashMap<Integer, String>(){{
+			put(1, "hello");
+			put(2, "world");
+			put(3, "epam");
+		}};
+
+		Flux<String> alphabet = Flux.just(-1, 1,2,3)
+				.handle((i, sink) -> {
+					String letter = store.get(i);
+					if (letter != null)
+						sink.next(letter);
+				});
+
+		StepVerifier.create(alphabet)
+				.expectNext("hello")
+				.expectNext("world")
+				.expectNext("epam")
+				.expectComplete()
+				.verify();
+
+		log.info("=== verify end ===");
 	}
 }
