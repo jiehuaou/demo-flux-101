@@ -51,6 +51,9 @@ public class ColdHotPublisherTests {
         });
     }
 
+    /**
+     * cold publisher can be subscribed multi-times.
+     */
     @Test
     void testColdMono(){
         Mono<String> cold1 = coldMonoSupplier();
@@ -73,8 +76,11 @@ public class ColdHotPublisherTests {
         cold.subscribe(s -> log.info(s));
     }
 
+    /**
+     * subscribe hot publisher in the middle, may miss some elements
+     */
     @Test
-    void testHotFlux(){
+    void testHotFluxMiddle(){
         Flux<String> cold = Flux
                 .fromStream(()->{
                     log.info("cold Flux.fromStream");
@@ -85,10 +91,90 @@ public class ColdHotPublisherTests {
 
         Disposable d0 = cold.subscribe(s -> log.info("user1 watching "+s));
 
-        Task.sleeping(250);
+        Task.sleeping(250); // in middle of first subscribe
+
         Disposable d1 = cold.subscribe(s -> log.info("user2 watching "+s));  // this subscriber might miss items.
 
         Task.waiting(d0);
         Task.waiting(d1);
     }
+
+    /**
+     * subscribe hot publisher after completion of other, will repeat everything.
+     */
+    @Test
+    void testHotFluxCompleted(){
+        Flux<String> hot = Flux
+                .fromStream(()->{
+                    log.info("cold Flux.fromStream");
+                    return Stream.of("a1", "a2", "a3", "a4", "a5");
+                })
+                .delayElements(Duration.ofMillis(100))
+                .share(); //   <-- makes cold source into hot.
+
+        Disposable d0 = hot.subscribe(s -> log.info("user1 watching "+s));
+
+        Task.sleeping(600); // after completion of first subscribe
+
+        Disposable d1 = hot.subscribe(s -> log.info("user2 watching "+s));  // this subscriber repeat everything.
+
+        Task.waiting(d0);
+        Task.waiting(d1);
+    }
+
+    /**
+     * with cache of cold publisher, second subscriber is able to watch all the scenes.
+     */
+    @Test
+    void testHotFluxCache(){
+        Flux<String> hot = Flux
+                .fromStream(()->{
+                    log.info("cold Flux.fromStream ----> started ");
+                    return Stream.of("a1", "a2", "a3", "a4", "a5");
+                })
+                .delayElements(Duration.ofMillis(1000))
+                .cache(); //   <-- makes cold source into hot.
+
+        Disposable d0 = hot
+                .doOnNext(s -> log.info("user1 watching "+s))
+                .count().doOnNext(s->log.info("user1 watched .........{}", s))
+                .subscribe();
+
+        Task.sleeping(1500); // at middle of first subscribe
+        Disposable d1 = hot
+                .delayElements(Duration.ofMillis(1300))
+                .doOnNext(s -> log.info("user2 watching "+s))
+                .count().doOnNext(s->log.info("user2 watched .........{}", s))
+                .subscribe();        // this subscriber repeat everything.
+
+        Task.sleeping(2500); // at middle of second subscribe
+        Disposable d2 = hot
+                .delayElements(Duration.ofMillis(1500))
+                .doOnNext(s -> log.info("user3 watching "+s))
+                .count().doOnNext(s->log.info("user3 watched .........{}", s))
+                .subscribe();       // this subscriber repeat everything.
+
+        Task.waiting(d0, d1, d2);
+
+    }
+
+    @Test
+    void testHotFluxPublish(){
+        Flux<String> cold = Flux
+                .fromStream(()->{
+                    log.info("cold Flux.fromStream ----> started ");
+                    return Stream.of("a1", "a2", "a3", "a4", "a5");
+                })
+                .delayElements(Duration.ofMillis(1000))
+                .publish();
+    }
+
 }
+
+
+
+
+
+
+
+
