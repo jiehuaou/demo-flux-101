@@ -26,6 +26,15 @@ public class Task {
         }
     }
 
+    public static void waiting(Disposable ...disposable) {
+        int len = disposable.length;
+        for (int i = 0; i < len; i++) {
+            Disposable d = disposable[i];
+            waiting(d);
+            //System.out.printf("disp[%d]...closed \n", i);
+        }
+    }
+
     public static void waiting(Disposable disposable, long expiredMilliSecond) {
         long t1 = System.currentTimeMillis();
         while (!disposable.isDisposed()){
