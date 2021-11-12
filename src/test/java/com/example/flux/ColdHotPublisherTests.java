@@ -3,6 +3,7 @@ package com.example.flux;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import reactor.core.Disposable;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -137,21 +138,21 @@ public class ColdHotPublisherTests {
 
         Disposable d0 = hot
                 .doOnNext(s -> log.info("user1 watching "+s))
-                .count().doOnNext(s->log.info("user1 watched .........{}", s))
+                .count().doOnNext(s->log.info("user1 done .........{}", s))
                 .subscribe();
 
         Task.sleeping(1500); // at middle of first subscribe
         Disposable d1 = hot
                 .delayElements(Duration.ofMillis(1300))
                 .doOnNext(s -> log.info("user2 watching "+s))
-                .count().doOnNext(s->log.info("user2 watched .........{}", s))
+                .count().doOnNext(s->log.info("user2 done .........{}", s))
                 .subscribe();        // this subscriber repeat everything.
 
         Task.sleeping(2500); // at middle of second subscribe
         Disposable d2 = hot
                 .delayElements(Duration.ofMillis(1500))
                 .doOnNext(s -> log.info("user3 watching "+s))
-                .count().doOnNext(s->log.info("user3 watched .........{}", s))
+                .count().doOnNext(s->log.info("user3 done .........{}", s))
                 .subscribe();       // this subscriber repeat everything.
 
         Task.waiting(d0, d1, d2);
@@ -160,13 +161,30 @@ public class ColdHotPublisherTests {
 
     @Test
     void testHotFluxPublish(){
-        Flux<String> cold = Flux
+        ConnectableFlux<String> hotConnectable = Flux
                 .fromStream(()->{
                     log.info("cold Flux.fromStream ----> started ");
                     return Stream.of("a1", "a2", "a3", "a4", "a5");
                 })
                 .delayElements(Duration.ofMillis(1000))
                 .publish();
+
+        Disposable d0 = hotConnectable
+                .doOnNext(s -> log.info("user1 watching "+s))
+                .count().doOnNext(s->log.info("user1 done .........{}", s))
+                .subscribe();
+
+        Task.sleeping(1500); // at middle of first subscribe
+        Disposable d1 = hotConnectable
+                .delayElements(Duration.ofMillis(1300))
+                .doOnNext(s -> log.info("user2 watching "+s))
+                .count().doOnNext(s->log.info("user2 done .........{}", s))
+                .subscribe();
+
+        // start to consume
+        hotConnectable.connect();
+
+        Task.waiting(d0,d1);
     }
 
 }

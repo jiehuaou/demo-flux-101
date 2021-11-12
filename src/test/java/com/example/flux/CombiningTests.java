@@ -147,7 +147,7 @@ public class CombiningTests {
     }
 
     /**
-     * zip ( (1,2,3), (a, b) ) --> (1, a) (2, b)
+     * zip ( flux(1,2,3), flux(a, b) ) --> (1, a), (2, b)
      */
     @Test
     void testZip(){
@@ -156,6 +156,19 @@ public class CombiningTests {
                 .doOnNext(x->{
                     log.info("{} AND {}", x.get(0), x.get(1));
                 }).blockLast();
+    }
+
+    /**
+     * zip ( flux(1, 2, 3), Mono(a) ) --> (1, a)
+     */
+    @Test
+    void testZipDx(){
+        Flux
+                .zip(Flux.just(1,2,3), Mono.just("a"))
+                .doOnNext(x->{
+                    log.info("{} AND {}", x.getT1(), x.getT2() );
+                })
+                .blockLast();
     }
 
     /**
