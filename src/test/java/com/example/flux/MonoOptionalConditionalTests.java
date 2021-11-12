@@ -14,10 +14,10 @@ import java.util.Optional;
  *
  * suppose :
  *
- *       find product(id, branchId, categoryId)       ** branchId, categoryId may be null
+ *       find-product (id, branchId, categoryId)   -->Mono<Product>        ** branchId, categoryId may be null
  *
- *                 |--> find branch (branchId)          if branchId    is not null
- *                 |--> find category (categoryId)      if categoryId  is not null
+ *                 |--> find-branch (branchId)          --> Mono<branch>
+ *                 |--> find-category (categoryId)      --> Mono<categoryId>
  *
  *                         |--> finalCompose( product, branch, category)
  */
