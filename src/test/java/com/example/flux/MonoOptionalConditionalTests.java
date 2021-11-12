@@ -156,10 +156,10 @@ public class MonoOptionalConditionalTests {
         findProd(id)
                 .flatMap(product->
                     Mono.zip(
-                                findBranch2(product.branchId),    // either one Mono<void> can cause ZIP to be cancelled.
-                                findCategory2(product.categoryId)
-                            )
-                            .flatMap(tx->finalCompose2(product, tx.getT1(), tx.getT2()))
+                            findBranch2(product.branchId),    // either one return Mono<void>, can cause ZIP to be cancelled.
+                            findCategory2(product.categoryId) // either one return Mono<void>, can cause ZIP to be cancelled.
+                        )
+                        .flatMap(tx->finalCompose2(product, tx.getT1(), tx.getT2()))
                 )
                 //.log()
                 .subscribe(s->log.info(s));
