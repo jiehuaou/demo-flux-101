@@ -1,11 +1,15 @@
 package com.example.flux;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.Optional;
 
@@ -27,8 +31,8 @@ public class MonoOptionalConditionalTests {
     @Data
     @AllArgsConstructor
     static class Branch{
-        String desc;
         String branchId;
+        String desc;
     }
     @Data
     @AllArgsConstructor
@@ -38,6 +42,7 @@ public class MonoOptionalConditionalTests {
     }
     @Data
     @AllArgsConstructor
+    @Builder
     static class Product{
         String id;
         String branchId;
@@ -45,14 +50,19 @@ public class MonoOptionalConditionalTests {
     }
 
     static Mono<Product> findProd(String id){
+        Product.ProductBuilder builder = Product.builder().id(id);
         if(id.equalsIgnoreCase("001")){
-            return Mono.just(new Product(id, "b001", null));
+            builder.branchId("b001").categoryId(null);
         }else if(id.equalsIgnoreCase("002")){
-            return Mono.just(new Product(id, null, "c002"));
+            builder.branchId(null).categoryId("c002");
         }else if(id.equalsIgnoreCase("003")){
-            return Mono.just(new Product(id, "b003", "c003"));
+            builder.branchId("b003").categoryId("c003");
         }
-        return Mono.just(new Product(id, null, null));
+
+        Product product = builder.build();
+        log.info("build product --> {}", product);
+        // return
+        return Mono.just(product);
     }
     static Mono<Branch> findBranch(String id){
         return Mono.just(new Branch(id, "sample Branch"));
@@ -138,9 +148,12 @@ public class MonoOptionalConditionalTests {
         return Mono.just("done");
     }
 
-    @Test
-    void testBetterSolution_without_conditional_branch(){
-        findProd("001")
+
+    @ParameterizedTest
+    @ValueSource(strings = { "001", "002", "003", "004" })
+    void testBetterSolution_without_conditional_branch(String id){
+        log.info("=============== start of {} ==============", id);
+        findProd(id)
                 .flatMap(product->
                     Mono.zip(
                                 findBranch2(product.branchId),    // either one Mono<void> can cause ZIP to be cancelled.
@@ -148,18 +161,23 @@ public class MonoOptionalConditionalTests {
                             )
                             .flatMap(tx->finalCompose2(product, tx.getT1(), tx.getT2()))
                 )
-                .log()
-                .subscribe();
+                //.log()
+                .subscribe(s->log.info(s));
+
+        log.info("=============== end of {} ==============", id);
     }
 
     @Test
     void testFindBranch(){
-        findBranch2("123")
-                .log()
-                .subscribe();
 
-        findBranch2(null)
-                .log()
-                .subscribe();
+        StepVerifier.create(findBranch2("123"))
+                .expectNextMatches(s->s.get().branchId.equalsIgnoreCase("123"))
+                .expectComplete()
+                .verify();
+
+        StepVerifier.create(findBranch2(null))
+                .expectNext(Optional.empty())
+                .expectComplete()
+                .verify();
     }
 }
