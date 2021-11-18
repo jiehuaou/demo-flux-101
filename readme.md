@@ -29,7 +29,7 @@ public class ColdHotPublisherTests {}
 
 ```java
 // service1() 1 -----> * service2() 1 --> * service3()
-//                     |--> 1 service4()
+//                |--> 1 service4()
 
 public class CombiningTests {
     static Flux<Response1> service1(){
