@@ -6,7 +6,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
-
+/**
+ * Mono.fromCallable() - Create a Mono producing its value using the provided Callable
+ * Mono.defer() - this task will be executed lazily like Mono.fromCallable(), but normally invoke other lib API.
+ * Mono.create() - the most advanced method that gives you the full control over the emitted values.
+ */
 public class MonoCallableCreatorTests {
     @Test
     void testMonoFromCallable(){

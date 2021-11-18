@@ -102,3 +102,14 @@ public class MonoOptionalConditionalTests {
 }
 
 ```
+
+## Mono.create() vs Mono.fromCallable() vs Mono.defer()
+* Mono.fromCallable() - Create a Mono producing its value using the provided Callable
+* Mono.defer() - this task will be executed lazily like Mono.fromCallable(), but normally invoke other lib API.
+* Mono.create() - the most advanced method that gives you the full control over the emitted values.
+```java
+
+public class MonoCallableCreatorTests {}
+public class MonoDeferTests {}
+```
+
