@@ -13,14 +13,14 @@ public class BackpressureTests {}
 ```  
   
 ## demo hot vs cold publisher
-* hot publisher:
-* 1) do not create new data producer for each new subscription,
-* 2) Instead there will be only one data producer and all the observers listen to the data produced by the single data producer.
-* 3) So all the observers get the same data.
-*
-* cold publisher:
-* 1) by default do not produce any value unless at least 1 observer subscribes to it.
-* 2) Publishers create new data producers for each new subscription.
+hot publisher:
+ 1) do not create new data producer for each new subscription,
+ 2) Instead there will be only one data producer and all the observers listen to the data produced by the single data producer.
+ 3) So all the observers get the same data.
+
+cold publisher:
+ 1) by default do not produce any value unless at least 1 observer subscribes to it.
+ 2) Publishers create new data producers for each new subscription.
 ```java
 public class ColdHotPublisherTests {}
 ```
