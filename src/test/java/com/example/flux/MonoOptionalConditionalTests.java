@@ -80,7 +80,7 @@ public class MonoOptionalConditionalTests {
     }
 
     /**
-     * the worst cases
+     * this is example for bad coding with a lot of conditional branch.
      */
     @Test
     void testBadConditional(){

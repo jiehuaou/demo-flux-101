@@ -5,7 +5,12 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 /**
- * demo retry when error happen
+ * retry = re-subscribe if the upstream completed with an exception
+ *
+ * repeat = re-subscribe if the upstream completed successfully
+ *
+ * this demo retry when error happen
+ *
  */
 @Log4j2
 public class FluxErrorRetry1Tests {
