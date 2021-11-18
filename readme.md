@@ -24,3 +24,34 @@ cold publisher:
 ```java
 public class ColdHotPublisherTests {}
 ```
+
+## demo complex service combination
+
+```java
+// service1() 1 -----> * service2() 1 --> * service3()
+//                     |--> 1 service4()
+
+public class CombiningTests {
+    static Flux<Response1> service1(){
+        return Flux
+                .just(new Response1("a1", "a2"))
+                .delayElements(Duration.ofMillis(4));
+    }
+    static Flux<Response2> service2(String a1){
+        return Flux
+                .just(new Response2("b1-" + a1), new Response2("b2-" + a1))
+                .delayElements(Duration.ofMillis(3));
+    }
+    static Flux<Response3> service3(String b1){
+        return Flux
+                .just(new Response3("c1-" + b1), new Response3("c2-" + b1))
+                .delayElements(Duration.ofMillis(5));
+    }
+    static Mono<Response4> service4(String a2){
+        return Mono
+                .just(new Response4("d1-" + a2))
+                .delayElement(Duration.ofMillis(8));
+    }
+    // how to compose service1 with other service ?
+}
+```
