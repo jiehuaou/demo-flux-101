@@ -53,5 +53,52 @@ public class CombiningTests {
                 .delayElement(Duration.ofMillis(8));
     }
     // how to compose service1 with other service ?
+    
 }
+```
+https://stackoverflow.com/questions/54543039/webflux-chaining-to-call-multiple-services-and-response-aggregation
+
+## demo use Mono<Option< T >> to replace Conditional branch.
+```java
+/**
+ * 
+ * suppose :
+ *
+ *       find-product (id),    -->Mono<Product(id,branchId, categoryId)>        ** branchId, categoryId may be null
+ *
+ *                 |--> find-branch (branchId)          --> Mono<branch>
+ *                 |--> find-category (categoryId)      --> Mono<categoryId>
+ *
+ *                         |--> finalCompose( product, branch, category)
+ */
+
+@Log4j2
+public class MonoOptionalConditionalTests {
+    /**
+     * this is example for bad coding style with a lot of conditional branch.
+     */
+    @Test
+    void testBadConditional(){
+        findProd("001")
+                .flatMap(product->{
+                    if(product.branchId!=null && product.categoryId!=null){
+                        return Mono.zip(
+                                findBranch(product.branchId),
+                                findCategory(product.categoryId)
+                        ).flatMap(t2->finalCompose(product, t2.getT1(), t2.getT2()));
+                    }else if(product.branchId!=null  && product.categoryId==null){
+                        return findBranch(product.branchId)
+                                .flatMap(branch->finalCompose(product, branch, null));
+                    }else if(product.branchId==null  && product.categoryId!=null){
+                        return findCategory(product.categoryId)
+                                .flatMap(category->finalCompose(product, null, category));
+                    }
+                    return finalCompose(product, null, null);
+                })
+                .block();
+    }
+
+    //////-------------------- how to improve ? ------------
+}
+
 ```
