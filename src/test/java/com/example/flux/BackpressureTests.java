@@ -94,13 +94,16 @@ public class BackpressureTests {
 
 
     /**
-     * limit rate
+     * limit rate ( prefetchRate )
+     *      -> first request ( prefetchRate such as 100 )
+     *      -> second request ( prefetchRate * 75% = 75 )
+     *      -> and so on
      */
     @Test
     void testLimitRate(){
         Flux.range(1,250)
                 .log()
-                .limitRate(10)
+                .limitRate(100)
                 //.flatMap(x->asyncTask(x).subscribeOn(Schedulers.boundedElastic()), 5)
                 // .doOnNext(x->log.info(x))
                 .blockLast();
