@@ -21,6 +21,9 @@ public class ReactiveController {
     @Autowired
     WebClient.Builder builder;
 
+    /**
+    *   web service of Mono<Hello>
+     */
     @RequestMapping("/say/{name}")
     public ResponseEntity<Mono<Hello>> say(@PathVariable String name){
         log.info("/say/{} -----> invoked", name);
@@ -28,6 +31,9 @@ public class ReactiveController {
         return ResponseEntity.ok(mono);
     }
 
+    /**
+     *   web service of Flux<Hello>
+     */
     @RequestMapping(value = "/hello",  produces = MediaType.APPLICATION_JSON_VALUE)
     public Flux<Hello> helloAll(){
         Flux<Hello> ret = Flux.just(new Hello("hello", "a1"),
@@ -38,6 +44,9 @@ public class ReactiveController {
         return ret;
     }
 
+    /**
+     * call /say/www by WebClient
+     */
     @RequestMapping("/say-www")
     public ResponseEntity<Mono<Hello>> sayWWW(){
         Mono<Hello> hello = builder.baseUrl("http://localhost:8080").build()
@@ -45,8 +54,25 @@ public class ReactiveController {
                 .uri("/say/www")
                 .headers(headers -> headers.setBasicAuth("admin", "123"))
                 .retrieve()
-                .bodyToMono(Hello.class).log();
+                .bodyToMono(Hello.class)
+                .log();
+
         log.info("/say-www  -----> invoked");
+        return ResponseEntity.ok(hello);
+    }
+
+    /**
+     * call /say/www by WebClient
+     */
+    @RequestMapping("/say-www2")
+    public ResponseEntity<Mono<Hello>> sayWWW2(){
+        Mono<Hello> hello = builder.baseUrl("http://localhost:8080").build()
+                .get()
+                .uri("/say/www")
+                .headers(headers -> headers.setBasicAuth("admin", "123"))
+                .exchangeToMono(rs->rs.bodyToMono(Hello.class));
+
+        log.info("/say-www 2 -----> invoked");
         return ResponseEntity.ok(hello);
     }
 
