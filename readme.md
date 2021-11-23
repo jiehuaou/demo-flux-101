@@ -113,3 +113,18 @@ public class MonoCallableCreatorTests {}
 public class MonoDeferTests {}
 ```
 
+## demo side-effect
+**doOnNext()**
+* state is correct if publisher with doOnNext(e->state++) subscribe once.
+* with doOnNext(e->state++), state could be incorrect if publisher is subscribed twice.
+
+
+
+**delayUntil(e->publisher)**
+* like   doOnNext(), delayUntil(e->publisher) does not change the element;
+* unlike doOnNext(), delayUntil(e->publisher) will wait until the publisher finished or exception;
+* delayUntil(e->publisher) Error could propagate immediately to downstream.
+
+```java
+public class FluxSideEffectTests {}
+```
