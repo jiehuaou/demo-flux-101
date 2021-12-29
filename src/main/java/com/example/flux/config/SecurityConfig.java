@@ -1,6 +1,7 @@
 package com.example.flux.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
@@ -33,14 +34,16 @@ public class SecurityConfig {
                 .authorizeExchange() // following path with specific ROLE
                 .pathMatchers("/students/admin").hasAuthority("ROLE_ADMIN")
                 .pathMatchers("/students/*").hasAuthority("ROLE_USER")
-                .pathMatchers("/say/*").hasAuthority("ROLE_ADMIN")
+                .pathMatchers("/say/*").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                 .pathMatchers("/hello").permitAll()   // allow all, either login ot not
                 .pathMatchers("/say-www").permitAll()  // allow all, either login ot not
+                .pathMatchers("/say-www2").permitAll()
 
                 .anyExchange().authenticated()  // all other path with authenticated
 
                 .and().httpBasic()  // use http-basic auth method
-                .and().build();
+                .and().csrf().disable()
+                .build();
     }
 
     @Bean
