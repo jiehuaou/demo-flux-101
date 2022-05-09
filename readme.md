@@ -146,3 +146,5 @@ public class FluxSideEffectTests {}
                 .doOnSuccess(student -> 
                    log.info("success call with {}", student));  // print success result
 ```
+
+end.
