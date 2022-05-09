@@ -1,8 +1,11 @@
 package com.example.flux.model;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@ToString
+@Builder
+@NoArgsConstructor
 public class Student {
     private Long studentId;
     private String firstName;

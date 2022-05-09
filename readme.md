@@ -128,3 +128,21 @@ public class MonoDeferTests {}
 ```java
 public class FluxSideEffectTests {}
 ```
+
+## How to monitor the error text when status 4XX,5XX
+```java
+ Mono<Student> objectMono = builder.baseUrl("http://localhost:8080").build()
+                .get()
+                .uri("/sub/" + id)
+                .retrieve()
+                .onStatus(HttpStatus::isError, clientResponse -> {
+                    return clientResponse.bodyToMono(String.class) // get body
+                            .doOnNext(body ->  // print
+                                    log.error("clientResponse with {}", body))
+                   .flatMap(e -> clientResponse.createException());  // retrun Response Exception
+
+                })
+                .bodyToMono(Student.class)
+                .doOnSuccess(student -> 
+                   log.info("success call with {}", student));  // print success result
+```

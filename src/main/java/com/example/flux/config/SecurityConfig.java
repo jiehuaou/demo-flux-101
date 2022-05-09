@@ -38,7 +38,8 @@ public class SecurityConfig {
                 .pathMatchers("/hello").permitAll()   // allow all, either login ot not
                 .pathMatchers("/say-www").permitAll()  // allow all, either login ot not
                 .pathMatchers("/say-www2").permitAll()
-
+                .pathMatchers("/map/sub/*").permitAll()
+                .pathMatchers("/sub/*").permitAll()
                 .anyExchange().authenticated()  // all other path with authenticated
 
                 .and().httpBasic()  // use http-basic auth method
