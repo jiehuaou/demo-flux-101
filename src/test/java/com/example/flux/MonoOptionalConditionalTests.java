@@ -18,10 +18,10 @@ import java.util.Optional;
  *
  * suppose :
  *
- *       find-product (id),    -->Mono<Product(id, branchId, categoryId)>        ** branchId, categoryId may be null
+ *       find-product (id),    := Mono<Product(id, branchId, categoryId)>        { either branchId, categoryId may be null }
  *
- *                 |--> find-branch (branchId)          --> Mono<branch>
- *                 |--> find-category (categoryId)      --> Mono<categoryId>
+ *                 |--> find-branch (branchId)          := Mono<branch>
+ *                 |--> find-category (categoryId)      := Mono<category>
  *
  *                         |--> finalCompose( product, branch, category)
  */
