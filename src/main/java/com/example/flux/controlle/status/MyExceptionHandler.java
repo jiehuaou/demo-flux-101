@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
 
+/**
+ * use handler to return error object instead of business object,
+ */
 @ControllerAdvice
 public class MyExceptionHandler {
     @ExceptionHandler(BedRequestException.class)
