@@ -65,7 +65,7 @@ https://stackoverflow.com/questions/54543039/webflux-chaining-to-call-multiple-s
  *
  * suppose :
  *
- *    find-product (id),    := Mono<Product(id, branchId, categoryId)>  { either branchId, categoryId may be null }
+ *    find-product (id),    := Mono<Product(id, branchId, categoryId)> { branchId, categoryId may be null }
  *
  *              |--> find-branch (branchId)          := Mono<branch>
  *              |--> find-category (categoryId)      := Mono<category>
