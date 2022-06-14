@@ -20,7 +20,7 @@ import static com.example.flux.Task.waiting;
 @Log4j2
 public class BackpressureTests {
     /**
-     * consumer with request(N)
+     * Subscriber with request(N)
      */
     @Test
     void testBackpressure1(){
@@ -33,7 +33,7 @@ public class BackpressureTests {
                     public void onSubscribe(Subscription s) {
                         System.out.println("onSubscribe");
                         this.s = s;
-                        System.out.println("Requesting 2 emissions");
+                        System.out.println("Requesting 2 emissions first");
                         s.request(2);
                     }
                     @Override
@@ -41,7 +41,7 @@ public class BackpressureTests {
                         System.out.println("onNext " + i);
                         counter++;
                         if (counter % 2 == 0) {
-                             System.out.println("Requesting 2 emissions");
+                             System.out.println("Requesting 2 emissions further");
                              s.request(2);
                             // s.cancel();
                         }
@@ -67,8 +67,8 @@ public class BackpressureTests {
         Flux<String> tick = Flux.interval(Duration.ofMillis(10))
                 .onBackpressureBuffer(10) // backpressure strategy
                 .flatMap(i-> Mono.fromCallable(()->{
-                            System.out.println("simulate IO " + Thread.currentThread() + "  " + i);
-                            sleeping(1000L); // simulate IO delay, very slow
+                            System.out.println("simulate I/O delay @ " + Thread.currentThread() + "  " + i);
+                            sleeping(1000L); // simulate I/O delay, very slow
                             return String.format("String %d", i);
                         }).subscribeOn(Schedulers.boundedElastic())
                         , 3)
@@ -84,11 +84,11 @@ public class BackpressureTests {
     }
 
     /**
-     * simulate slow IO delay,
+     * simulate slow I/O delay,
      */
     public static Mono<String> asyncTask(Integer i) {
         return Mono.fromCallable(()->{
-            System.out.println("simulate IO " + Thread.currentThread() + " -- " + i);
+            System.out.println("simulate I/O delay @ " + Thread.currentThread() + " -- " + i);
             sleeping(1000L); // simulate IO delay, very slow
             return String.format("Text %d", i);
         });
@@ -137,7 +137,7 @@ public class BackpressureTests {
                 .delayElement(Duration.ofMillis(100))
                 .repeat(10)
                 .subscribeOn(Schedulers.boundedElastic())
-                .subscribe(s->log.info(s));
+                .subscribe(log::info);
 
         waiting(disposable);
     }
