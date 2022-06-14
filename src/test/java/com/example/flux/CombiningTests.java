@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.List;
@@ -143,6 +144,7 @@ public class CombiningTests {
     }
 
     /**
+     * always one by one
      * zip ( flux(1,2,3), flux(a, b) ) --> (1, a), (2, b)
      */
     @Test
@@ -155,6 +157,7 @@ public class CombiningTests {
     }
 
     /**
+     * always one by one
      * zip ( flux(1, 2, 3), Mono(a) ) --> (1, a)
      */
     @Test
@@ -168,13 +171,15 @@ public class CombiningTests {
     }
 
     /**
+     * merge order not always the same
      * merge ((1,2,3), (a,b,c)) --> async (1,a,2,3,b,c)
      */
     @Test
     void testMerge(){
         service1()
                 .flatMap(response1 -> Flux.merge(
-                        Flux.just(1,2,3), Flux.just("a", "b")
+                        Flux.just(1,2,3).subscribeOn(Schedulers.boundedElastic()),
+                                Flux.just("a", "b", "c").subscribeOn(Schedulers.boundedElastic())
 //                        service2(response1.a1), service4(response1.a1)
                     )
                 )
@@ -183,6 +188,7 @@ public class CombiningTests {
     }
 
     /**
+     * sequentially subscribing to the first then the next,
      * concat ((1,2,3), (a,b,c)) --> (1,2,3,a,b,c)
      */
     @Test
@@ -196,16 +202,20 @@ public class CombiningTests {
     }
 
     /**
-     * combineLatest( (1,2,3), (4,5,6) ) --> (1,4), (2,4), (2,5), (3,5), (3,6)
+     * always combine latest element
+     * combineLatest( (1,2,3, 8, 9), (4,5,6) ) --> (1,4), (2,4), (2,5), (3,5), (3,6), (8,6), (9,6)
      */
     @Test
     void testCombineLatest(){
         Flux.combineLatest(
-                Flux.just(1,2,3).delayElements(Duration.ofMillis(500)),
-                Flux.just(4,5,6).delayElements(Duration.ofMillis(550)),
-                (p1, p2)-> p1*10 + p2
+                Flux.just(1,2,3,8,9).delayElements(Duration.ofMillis(500)),
+                Flux.just(4,5,6).delayElements(Duration.ofMillis(500 + 5)),
+                (p1, p2)-> {
+                    log.info("return [ {}, {} ]", p1, p2);
+                    return p1*100 + p2;
+                }
         )
-                .doOnNext(e->log.info(e))
+                //.doOnNext(e->log.info(e))
                 //.map(x->1)
                 .reduce(0, (a,b)->a+b)
                 .doOnNext(e->log.info("total -> {}", e))
@@ -244,8 +254,11 @@ public class CombiningTests {
     }
 
     /**
+     * complex combination.
      * service1() 1 -----> * service2() 1 --> * service3()
      *                |--> 1 service4()
+     *
+     * https://stackoverflow.com/questions/54543039/webflux-chaining-to-call-multiple-services-and-response-aggregation
      */
     @Test
     void testComplexCombineLatest(){
